@@ -2,12 +2,13 @@ package vm
 
 import (
 	"fmt"
-	"github.com/KubeOperator/FusionComputeGolangSDK/pkg/client"
-	"github.com/KubeOperator/FusionComputeGolangSDK/pkg/site"
-	"github.com/KubeOperator/FusionComputeGolangSDK/pkg/task"
 	"log"
 	"testing"
 	"time"
+
+	"github.com/lawyzheng/go-fusion-compute/pkg/client"
+	"github.com/lawyzheng/go-fusion-compute/pkg/site"
+	"github.com/lawyzheng/go-fusion-compute/pkg/task"
 )
 
 func TestManager_List(t *testing.T) {
@@ -106,7 +107,7 @@ func TestManager_CloneVm(t *testing.T) {
 		time.Sleep(5 * time.Second)
 	}
 
-	err = m.DeleteVm(ts.Uri)
+	_, err = m.DeleteVm(ts.Uri)
 	if err != nil {
 		log.Fatal(err)
 	}

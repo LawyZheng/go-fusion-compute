@@ -2,9 +2,10 @@ package task
 
 import (
 	"encoding/json"
-	"github.com/KubeOperator/FusionComputeGolangSDK/pkg/client"
-	"github.com/KubeOperator/FusionComputeGolangSDK/pkg/common"
 	"path"
+
+	"github.com/lawyzheng/go-fusion-compute/pkg/client"
+	"github.com/lawyzheng/go-fusion-compute/pkg/common"
 )
 
 type Manager interface {

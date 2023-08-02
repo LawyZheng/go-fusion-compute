@@ -2,11 +2,12 @@ package network
 
 import (
 	"encoding/json"
-	"github.com/KubeOperator/FusionComputeGolangSDK/pkg/client"
-	"github.com/KubeOperator/FusionComputeGolangSDK/pkg/common"
-	"github.com/KubeOperator/FusionComputeGolangSDK/pkg/vm"
 	"path"
 	"strings"
+
+	"github.com/lawyzheng/go-fusion-compute/pkg/client"
+	"github.com/lawyzheng/go-fusion-compute/pkg/common"
+	"github.com/lawyzheng/go-fusion-compute/pkg/vm"
 )
 
 const (

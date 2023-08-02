@@ -2,9 +2,10 @@ package storage
 
 import (
 	"encoding/json"
-	"github.com/KubeOperator/FusionComputeGolangSDK/pkg/client"
-	"github.com/KubeOperator/FusionComputeGolangSDK/pkg/common"
 	"strings"
+
+	"github.com/lawyzheng/go-fusion-compute/pkg/client"
+	"github.com/lawyzheng/go-fusion-compute/pkg/common"
 )
 
 const (

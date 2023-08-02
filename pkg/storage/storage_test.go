@@ -2,10 +2,11 @@ package storage
 
 import (
 	"fmt"
-	"github.com/KubeOperator/FusionComputeGolangSDK/pkg/client"
-	"github.com/KubeOperator/FusionComputeGolangSDK/pkg/site"
 	"log"
 	"testing"
+
+	"github.com/lawyzheng/go-fusion-compute/pkg/client"
+	"github.com/lawyzheng/go-fusion-compute/pkg/site"
 )
 
 func TestManager_List(t *testing.T) {

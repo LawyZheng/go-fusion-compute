@@ -2,9 +2,10 @@ package site
 
 import (
 	"fmt"
-	"github.com/KubeOperator/FusionComputeGolangSDK/pkg/client"
 	"log"
 	"testing"
+
+	"github.com/lawyzheng/go-fusion-compute/pkg/client"
 )
 
 func TestManager_List(t *testing.T) {

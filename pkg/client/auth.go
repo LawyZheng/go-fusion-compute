@@ -4,7 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/KubeOperator/FusionComputeGolangSDK/pkg/common"
+
+	"github.com/lawyzheng/go-fusion-compute/pkg/common"
 )
 
 const (

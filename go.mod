@@ -1,4 +1,4 @@
-module github.com/KubeOperator/FusionComputeGolangSDK
+module github.com/lawyzheng/go-fusion-compute
 
 go 1.14
 

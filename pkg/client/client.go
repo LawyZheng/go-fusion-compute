@@ -2,8 +2,10 @@ package client
 
 import (
 	"errors"
-	"github.com/KubeOperator/FusionComputeGolangSDK/pkg/common"
+
 	"github.com/go-resty/resty/v2"
+
+	"github.com/lawyzheng/go-fusion-compute/pkg/common"
 )
 
 type Session string

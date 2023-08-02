@@ -2,10 +2,11 @@ package network
 
 import (
 	"fmt"
-	"github.com/KubeOperator/FusionComputeGolangSDK/pkg/client"
-	"github.com/KubeOperator/FusionComputeGolangSDK/pkg/site"
 	"log"
 	"testing"
+
+	"github.com/lawyzheng/go-fusion-compute/pkg/client"
+	"github.com/lawyzheng/go-fusion-compute/pkg/site"
 )
 
 func TestManager_List(t *testing.T) {
@@ -28,7 +29,7 @@ func TestManager_List(t *testing.T) {
 			log.Fatal(err)
 		}
 		fmt.Println(cs[0].Uri)
-		pg, err := cm.ListPortGroup(cs[0].Uri)
+		pg, err := cm.ListPortGroup()
 		if err != nil {
 			log.Fatal(err)
 		}
