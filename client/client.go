@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 
-	"github.com/lawyzheng/go-fusion-compute/pkg/common"
+	"github.com/lawyzheng/go-fusion-compute/internal/common"
 )
 
 type Session string

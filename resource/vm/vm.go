@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lawyzheng/go-fusion-compute/pkg/client"
-	"github.com/lawyzheng/go-fusion-compute/pkg/common"
+	"github.com/lawyzheng/go-fusion-compute/client"
+	"github.com/lawyzheng/go-fusion-compute/internal/common"
 )
 
 const (

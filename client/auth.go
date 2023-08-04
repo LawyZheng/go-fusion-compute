@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
-	"github.com/lawyzheng/go-fusion-compute/pkg/common"
+	"github.com/lawyzheng/go-fusion-compute/internal/common"
 )
 
 const (

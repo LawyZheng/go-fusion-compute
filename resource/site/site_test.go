@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/lawyzheng/go-fusion-compute/pkg/client"
+	"github.com/lawyzheng/go-fusion-compute/client"
 )
 
 func TestManager_List(t *testing.T) {

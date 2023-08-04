@@ -1,16 +1,16 @@
-package storage
+package cluster
 
 import (
 	"fmt"
 	"log"
 	"testing"
 
-	"github.com/lawyzheng/go-fusion-compute/pkg/client"
-	"github.com/lawyzheng/go-fusion-compute/pkg/site"
+	"github.com/lawyzheng/go-fusion-compute/client"
+	"github.com/lawyzheng/go-fusion-compute/resource/site"
 )
 
 func TestManager_List(t *testing.T) {
-	c := client.NewFusionComputeClient("https://100.199.16.208:7443", "kubeoperator", "Calong@2015")
+	c := client.NewFusionComputeClient("https://100.199.16.208:7443", "fit2cloud", "Huawei@1234")
 	err := c.Connect()
 	if err != nil {
 		log.Fatal(err)
@@ -24,7 +24,7 @@ func TestManager_List(t *testing.T) {
 	}
 	for _, s := range ss {
 		cm := NewManager(c, s.Uri)
-		cs, err := cm.ListDataStore()
+		cs, err := cm.ListCluster()
 		if err != nil {
 			log.Fatal(err)
 		}

@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lawyzheng/go-fusion-compute/pkg/client"
-	"github.com/lawyzheng/go-fusion-compute/pkg/site"
-	"github.com/lawyzheng/go-fusion-compute/pkg/task"
+	"github.com/lawyzheng/go-fusion-compute/client"
+	"github.com/lawyzheng/go-fusion-compute/resource/site"
+	"github.com/lawyzheng/go-fusion-compute/resource/task"
 )
 
 func TestManager_List(t *testing.T) {

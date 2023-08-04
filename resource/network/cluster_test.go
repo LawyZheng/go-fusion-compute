@@ -1,12 +1,12 @@
-package cluster
+package network
 
 import (
 	"fmt"
 	"log"
 	"testing"
 
-	"github.com/lawyzheng/go-fusion-compute/pkg/client"
-	"github.com/lawyzheng/go-fusion-compute/pkg/site"
+	"github.com/lawyzheng/go-fusion-compute/client"
+	"github.com/lawyzheng/go-fusion-compute/resource/site"
 )
 
 func TestManager_List(t *testing.T) {
@@ -24,10 +24,22 @@ func TestManager_List(t *testing.T) {
 	}
 	for _, s := range ss {
 		cm := NewManager(c, s.Uri)
-		cs, err := cm.ListCluster()
+		cs, err := cm.ListDVSwitch()
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(cs)
+		fmt.Println(cs[0].Uri)
+		pg, err := cm.ListPortGroup()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, p := range pg {
+			ips, err := cm.ListPortGroupInUseIp(p.Urn)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println(ips)
+		}
 	}
 }
