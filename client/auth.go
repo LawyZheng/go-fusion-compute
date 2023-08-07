@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 
 	"github.com/lawyzheng/go-fusion-compute/internal/common"
+	fcErr "github.com/lawyzheng/go-fusion-compute/pkg/error"
 )
 
 const (
@@ -32,7 +33,7 @@ type auth struct {
 
 func (a *auth) Login() error {
 	host := a.client.GetHost()
-	r := common.NewHttpClient()
+	r := a.client.GetHTTPClient()
 	r.SetHostURL(host).
 		SetHeader(XAuthUser, a.client.GetUser()).
 		SetHeader(XAuthKey, encodePassword(a.client.GetPassword())).
@@ -47,14 +48,15 @@ func (a *auth) Login() error {
 		token := resp.Header().Get(XAuthToken)
 		a.client.SetSession(token)
 	} else {
-		return common.FormatHttpError(resp)
+		e := new(fcErr.Basic)
+		return common.FormatHttpError(resp, e)
 	}
 	return nil
 }
 
 func (a *auth) Logout() error {
 	host := a.client.GetHost()
-	r := common.NewHttpClient()
+	r := a.client.GetHTTPClient()
 	r.SetHostURL(host).
 		SetHeader(XAuthToken, string(a.client.GetSession()))
 	resp, err := r.R().Delete(authUri)
@@ -64,7 +66,8 @@ func (a *auth) Logout() error {
 	if resp.IsSuccess() {
 		a.client.SetSession("")
 	} else {
-		return common.FormatHttpError(resp)
+		e := new(fcErr.Basic)
+		return common.FormatHttpError(resp, e)
 	}
 	return nil
 }

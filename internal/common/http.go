@@ -2,10 +2,12 @@ package common
 
 import (
 	"crypto/tls"
-	"errors"
+	"encoding/json"
 	"fmt"
 
 	"github.com/go-resty/resty/v2"
+
+	fcErr "github.com/lawyzheng/go-fusion-compute/pkg/error"
 )
 
 func NewHttpClient() *resty.Client {
@@ -14,7 +16,10 @@ func NewHttpClient() *resty.Client {
 	return r
 }
 
-func FormatHttpError(resp *resty.Response) error {
-	text := fmt.Sprintf("code: %d,msg: %s", resp.StatusCode(), string(resp.Body()))
-	return errors.New(text)
+func FormatHttpError(resp *resty.Response, err fcErr.Error) error {
+	err.SetHTTPStatus(resp.StatusCode())
+	if e := json.Unmarshal(resp.Body(), err); e != nil {
+		return fmt.Errorf("status=%d;body=%s", resp.StatusCode(), string(resp.Body()))
+	}
+	return err
 }

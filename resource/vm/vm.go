@@ -11,6 +11,7 @@ import (
 
 	"github.com/lawyzheng/go-fusion-compute/client"
 	"github.com/lawyzheng/go-fusion-compute/internal/common"
+	fcErr "github.com/lawyzheng/go-fusion-compute/pkg/error"
 )
 
 const (
@@ -76,7 +77,8 @@ func (m *manager) CloneVm(templateUri string, request CloneVmRequest) (*CloneVmR
 		}
 
 	} else {
-		return nil, common.FormatHttpError(resp)
+		e := new(fcErr.Basic)
+		return nil, common.FormatHttpError(resp, e)
 	}
 	return &cloneVmResponse, nil
 }
@@ -104,7 +106,8 @@ func (m *manager) ListVm(isTemplate bool) ([]Vm, error) {
 		vms = listVmResponse.Vms
 
 	} else {
-		return nil, common.FormatHttpError(resp)
+		e := new(fcErr.Basic)
+		return nil, common.FormatHttpError(resp, e)
 	}
 	return vms, nil
 }
@@ -125,7 +128,8 @@ func (m *manager) DeleteVm(vmUri string) (*DeleteVmResponse, error) {
 			return nil, err
 		}
 	} else {
-		return nil, common.FormatHttpError(resp)
+		e := new(fcErr.Basic)
+		return nil, common.FormatHttpError(resp, e)
 	}
 	return &deleteVmResponse, nil
 }
@@ -147,7 +151,8 @@ func (m *manager) GetVM(vmUri string) (*Vm, error) {
 			return nil, err
 		}
 	} else {
-		return nil, common.FormatHttpError(resp)
+		e := new(fcErr.Basic)
+		return nil, common.FormatHttpError(resp, e)
 	}
 	return &item, nil
 }
@@ -169,7 +174,8 @@ func (m *manager) UploadImage(vmUri string, request ImportTemplateRequest) (*Imp
 		}
 		return &res, nil
 	} else {
-		return nil, common.FormatHttpError(resp)
+		e := new(fcErr.Basic)
+		return nil, common.FormatHttpError(resp, e)
 	}
 }
 

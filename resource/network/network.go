@@ -7,6 +7,7 @@ import (
 
 	"github.com/lawyzheng/go-fusion-compute/client"
 	"github.com/lawyzheng/go-fusion-compute/internal/common"
+	fcErr "github.com/lawyzheng/go-fusion-compute/pkg/error"
 	"github.com/lawyzheng/go-fusion-compute/resource/vm"
 )
 
@@ -51,7 +52,8 @@ func (m *manager) ListPortGroup() ([]PortGroup, error) {
 		}
 		portGroups = listPortGroupResponse.PortGroups
 	} else {
-		return nil, common.FormatHttpError(resp)
+		e := new(fcErr.Basic)
+		return nil, common.FormatHttpError(resp, e)
 	}
 	return portGroups, nil
 }
@@ -75,7 +77,8 @@ func (m *manager) ListPortGroupBySwitch(dvSwitchIdUri string) ([]PortGroup, erro
 		}
 		portGroups = listPortGroupResponse.PortGroups
 	} else {
-		return nil, common.FormatHttpError(resp)
+		e := new(fcErr.Basic)
+		return nil, common.FormatHttpError(resp, e)
 	}
 	return portGroups, nil
 }
@@ -98,7 +101,8 @@ func (m *manager) ListDVSwitch() ([]DVSwitch, error) {
 		}
 		dvSwitchs = listDVSwitchResponse.DVSwitchs
 	} else {
-		return nil, common.FormatHttpError(resp)
+		e := new(fcErr.Basic)
+		return nil, common.FormatHttpError(resp, e)
 	}
 	return dvSwitchs, nil
 }

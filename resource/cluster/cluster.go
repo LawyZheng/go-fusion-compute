@@ -6,6 +6,7 @@ import (
 
 	"github.com/lawyzheng/go-fusion-compute/client"
 	"github.com/lawyzheng/go-fusion-compute/internal/common"
+	fcErr "github.com/lawyzheng/go-fusion-compute/pkg/error"
 )
 
 const (
@@ -44,7 +45,8 @@ func (m *manager) ListCluster() ([]Cluster, error) {
 		}
 		clusters = listClusterResponse.Clusters
 	} else {
-		return nil, common.FormatHttpError(resp)
+		e := new(fcErr.Basic)
+		return nil, common.FormatHttpError(resp, e)
 	}
 	return clusters, nil
 

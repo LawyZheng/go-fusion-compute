@@ -5,6 +5,7 @@ import (
 
 	"github.com/lawyzheng/go-fusion-compute/client"
 	"github.com/lawyzheng/go-fusion-compute/internal/common"
+	fcErr "github.com/lawyzheng/go-fusion-compute/pkg/error"
 )
 
 const (
@@ -40,7 +41,8 @@ func (m *manager) GetSite(siteUri string) (*Site, error) {
 			return nil, err
 		}
 	} else {
-		return nil, common.FormatHttpError(resp)
+		e := new(fcErr.Basic)
+		return nil, common.FormatHttpError(resp, e)
 	}
 
 	return &site, nil
@@ -64,7 +66,8 @@ func (m *manager) ListSite() ([]Site, error) {
 		}
 		sites = listSiteResponse.Sites
 	} else {
-		return nil, common.FormatHttpError(resp)
+		e := new(fcErr.Basic)
+		return nil, common.FormatHttpError(resp, e)
 	}
 	return sites, nil
 }

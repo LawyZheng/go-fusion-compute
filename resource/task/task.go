@@ -6,6 +6,7 @@ import (
 
 	"github.com/lawyzheng/go-fusion-compute/client"
 	"github.com/lawyzheng/go-fusion-compute/internal/common"
+	fcErr "github.com/lawyzheng/go-fusion-compute/pkg/error"
 )
 
 type Manager interface {
@@ -37,7 +38,8 @@ func (m *manager) Get(taskUri string) (*Task, error) {
 			return nil, err
 		}
 	} else {
-		return nil, common.FormatHttpError(resp)
+		e := new(fcErr.Basic)
+		return nil, common.FormatHttpError(resp, e)
 	}
 	return &task, nil
 }

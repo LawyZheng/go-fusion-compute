@@ -18,14 +18,42 @@ type FusionComputeClient interface {
 	GetHost() string
 	GetUser() string
 	GetPassword() string
+	GetHTTPClient() *resty.Client
 	GetApiClient() (*resty.Client, error)
 }
 
-func NewFusionComputeClient(host string, user string, password string) FusionComputeClient {
+type RestyConstructor func() *resty.Client
+
+func newDefaultConfig() *Config {
+	return &Config{
+		RestyConstructor: common.NewHttpClient,
+	}
+}
+
+type Config struct {
+	RestyConstructor RestyConstructor
+}
+
+func (c *Config) Merge(conf *Config) {
+	if conf == nil {
+		return
+	}
+	if conf.RestyConstructor != nil {
+		c.RestyConstructor = conf.RestyConstructor
+	}
+}
+
+func NewFusionComputeClient(host string, user string, password string, cfg ...*Config) FusionComputeClient {
+	c := newDefaultConfig()
+	for i := range cfg {
+		c.Merge(cfg[i])
+	}
+
 	return &fusionComputeClient{
 		user:     user,
 		password: password,
 		host:     host,
+		config:   c,
 	}
 }
 
@@ -34,6 +62,8 @@ type fusionComputeClient struct {
 	user     string
 	password string
 	host     string
+
+	config *Config
 }
 
 func (f *fusionComputeClient) SetSession(token string) {
@@ -71,8 +101,12 @@ func (f *fusionComputeClient) GetPassword() string {
 	return f.password
 }
 
+func (f *fusionComputeClient) GetHTTPClient() *resty.Client {
+	return f.config.RestyConstructor()
+}
+
 func (f *fusionComputeClient) GetApiClient() (*resty.Client, error) {
-	r := common.NewHttpClient()
+	r := f.GetHTTPClient()
 	if f.GetSession() == "" {
 		return nil, errors.New("no session exists,please login and try it again")
 	}
