@@ -1,11 +1,14 @@
 package client
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 
 	"github.com/go-resty/resty/v2"
 
 	"github.com/lawyzheng/go-fusion-compute/internal/common"
+	fcErr "github.com/lawyzheng/go-fusion-compute/pkg/error"
 )
 
 type Session string
@@ -121,4 +124,78 @@ func (f *fusionComputeClient) setDefaultHeader(client *resty.Client) {
 		"Accept":          "application/json;version=v8.0;charset=UTF-8;",
 		"Accept-Language": "zh_CN:1.0",
 	})
+}
+
+func Get[S any](ctx context.Context, client FusionComputeClient, uri string, success *S) error {
+	e := new(fcErr.Basic)
+	return GetWithError(ctx, client, uri, success, e)
+}
+
+func GetWithError[S any, E fcErr.Error](ctx context.Context, client FusionComputeClient, uri string, success *S, failed E) error {
+	api, err := client.GetApiClient()
+	if err != nil {
+		return err
+	}
+
+	req := api.R()
+	if ctx != nil {
+		req = req.SetContext(ctx)
+	}
+
+	return do(req, resty.MethodGet, uri, success, failed)
+}
+
+func Post[S any](ctx context.Context, client FusionComputeClient, uri string, body interface{}, success *S) error {
+	e := new(fcErr.Basic)
+	return PostWithError(ctx, client, uri, body, success, e)
+}
+
+func PostWithError[S any, E fcErr.Error](ctx context.Context, client FusionComputeClient, uri string, body interface{}, success *S, failed E) error {
+	api, err := client.GetApiClient()
+	if err != nil {
+		return err
+	}
+
+	req := api.R()
+	if ctx != nil {
+		req = req.SetContext(ctx)
+	}
+
+	if body != nil {
+		req = req.SetBody(body)
+	}
+
+	return do(req, resty.MethodPost, uri, success, failed)
+}
+
+func Delete[S any](ctx context.Context, client FusionComputeClient, uri string, success *S) error {
+	e := new(fcErr.Basic)
+	return DeleteWithError(ctx, client, uri, success, e)
+}
+
+func DeleteWithError[S any, E fcErr.Error](ctx context.Context, client FusionComputeClient, uri string, success *S, failed E) error {
+	api, err := client.GetApiClient()
+	if err != nil {
+		return err
+	}
+
+	req := api.R()
+	if ctx != nil {
+		req = req.SetContext(ctx)
+	}
+
+	return do(req, resty.MethodDelete, uri, success, failed)
+}
+
+func do[S any, E fcErr.Error](req *resty.Request, method, uri string, success *S, failed E) error {
+	resp, err := req.Execute(method, uri)
+	if err != nil {
+		return err
+	}
+
+	if !resp.IsSuccess() {
+		return common.FormatHttpError(resp, failed)
+	}
+
+	return json.Unmarshal(resp.Body(), success)
 }
