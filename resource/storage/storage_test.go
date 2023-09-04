@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -18,13 +19,13 @@ func TestManager_List(t *testing.T) {
 	defer c.DisConnect()
 
 	sm := site.NewManager(c)
-	ss, err := sm.ListSite()
+	ss, err := sm.ListSite(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 	for _, s := range ss {
 		cm := NewManager(c, s.Uri)
-		cs, err := cm.ListDataStore()
+		cs, err := cm.ListDataStore(context.Background())
 		if err != nil {
 			log.Fatal(err)
 		}

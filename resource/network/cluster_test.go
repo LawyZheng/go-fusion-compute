@@ -1,6 +1,7 @@
 package network
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -24,18 +25,18 @@ func TestManager_List(t *testing.T) {
 	}
 	for _, s := range ss {
 		cm := NewManager(c, s.Uri)
-		cs, err := cm.ListDVSwitch()
+		cs, err := cm.ListDVSwitch(context.Background())
 		if err != nil {
 			log.Fatal(err)
 		}
 		fmt.Println(cs[0].Uri)
-		pg, err := cm.ListPortGroup()
+		pg, err := cm.ListPortGroup(context.Background())
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		for _, p := range pg {
-			ips, err := cm.ListPortGroupInUseIp(p.Urn)
+			ips, err := cm.ListPortGroupInUseIp(context.Background(), p.Urn)
 			if err != nil {
 				log.Fatal(err)
 			}

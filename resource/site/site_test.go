@@ -1,6 +1,7 @@
 package site
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -16,7 +17,7 @@ func TestManager_List(t *testing.T) {
 	}
 	defer c.DisConnect()
 	m := NewManager(c)
-	ss, err := m.ListSite()
+	ss, err := m.ListSite(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}

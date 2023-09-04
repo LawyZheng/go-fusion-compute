@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -20,13 +21,13 @@ func TestManager_List(t *testing.T) {
 	defer c.DisConnect()
 
 	sm := site.NewManager(c)
-	ss, err := sm.ListSite()
+	ss, err := sm.ListSite(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 	for _, s := range ss {
 		cm := NewManager(c, s.Uri)
-		cs, err := cm.ListVm(true)
+		cs, err := cm.ListVm(context.Background(), true)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -42,52 +43,53 @@ func TestManager_CloneVm(t *testing.T) {
 	}
 	defer c.DisConnect()
 	m := NewManager(c, "/service/sites/43BC08E8")
-	ts, err := m.CloneVm("/service/sites/43BC08E8/vms/i-00000034", CloneVmRequest{
-		Name:          "test-1",
-		Description:   "test create vm",
-		Location:      "urn:sites:43BC08E8:clusters:117",
-		IsBindingHost: false,
-		Config: Config{
-			Cpu: Cpu{
-				Quantity:    2,
-				Reservation: 0,
-			},
-			Memory: Memory{
-				QuantityMB:  2048,
-				Reservation: 2048,
-			},
-			Disks: []Disk{
-				{
-					SequenceNum:  1,
-					QuantityGB:   50,
-					IsDataCopy:   true,
-					DatastoreUrn: "urn:sites:43BC08E8:datastores:41",
-					IsThin:       true,
+	ts, err := m.CloneVm(context.Background(),
+		"/service/sites/43BC08E8/vms/i-00000034", CloneVmRequest{
+			Name:          "test-1",
+			Description:   "test create vm",
+			Location:      "urn:sites:43BC08E8:clusters:117",
+			IsBindingHost: false,
+			Config: Config{
+				Cpu: Cpu{
+					Quantity:    2,
+					Reservation: 0,
+				},
+				Memory: Memory{
+					QuantityMB:  2048,
+					Reservation: 2048,
+				},
+				Disks: []Disk{
+					{
+						SequenceNum:  1,
+						QuantityGB:   50,
+						IsDataCopy:   true,
+						DatastoreUrn: "urn:sites:43BC08E8:datastores:41",
+						IsThin:       true,
+					},
+				},
+				Nics: []Nic{
+					{
+						Name:         "vmnic1",
+						PortGroupUrn: "urn:sites:43BC08E8:dvswitchs:1:portgroups:1",
+					},
 				},
 			},
-			Nics: []Nic{
-				{
-					Name:         "vmnic1",
-					PortGroupUrn: "urn:sites:43BC08E8:dvswitchs:1:portgroups:1",
+			VmCustomization: Customization{
+				OsType:             "Linux",
+				Hostname:           "test-1",
+				IsUpdateVmPassword: false,
+				NicSpecification: []NicSpecification{
+					{
+						SequenceNum: 1,
+						Ip:          "100.199.10.88",
+						Netmask:     "255.255.255.0",
+						Gateway:     "100.199.10.1",
+						Setdns:      "114.114.114.114",
+						Adddns:      "8.8.8.8",
+					},
 				},
 			},
-		},
-		VmCustomization: Customization{
-			OsType:             "Linux",
-			Hostname:           "test-1",
-			IsUpdateVmPassword: false,
-			NicSpecification: []NicSpecification{
-				{
-					SequenceNum: 1,
-					Ip:          "100.199.10.88",
-					Netmask:     "255.255.255.0",
-					Gateway:     "100.199.10.1",
-					Setdns:      "114.114.114.114",
-					Adddns:      "8.8.8.8",
-				},
-			},
-		},
-	})
+		})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -96,7 +98,7 @@ func TestManager_CloneVm(t *testing.T) {
 
 	tm := task.NewManager(c, "/service/sites/43BC08E8")
 	for {
-		tt, err := tm.Get(ts.TaskUri)
+		tt, err := tm.Get(context.Background(), ts.TaskUri)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -107,7 +109,7 @@ func TestManager_CloneVm(t *testing.T) {
 		time.Sleep(5 * time.Second)
 	}
 
-	_, err = m.DeleteVm(ts.Uri)
+	_, err = m.DeleteVm(context.Background(), ts.Uri)
 	if err != nil {
 		log.Fatal(err)
 	}

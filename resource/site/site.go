@@ -1,23 +1,21 @@
 package site
 
 import (
-	"encoding/json"
+	"context"
 
 	"github.com/lawyzheng/go-fusion-compute/client"
-	"github.com/lawyzheng/go-fusion-compute/internal/common"
-	fcErr "github.com/lawyzheng/go-fusion-compute/pkg/error"
 )
 
 const (
 	siteUrl = "/service/sites"
 )
 
-type Interface interface {
-	ListSite() ([]Site, error)
-	GetSite(siteUri string) (*Site, error)
+type Manager interface {
+	ListSite(ctx context.Context) ([]Site, error)
+	GetSite(ctx context.Context, siteUri string) (*Site, error)
 }
 
-func NewManager(client client.FusionComputeClient) Interface {
+func NewManager(client client.FusionComputeClient) Manager {
 	return &manager{client: client}
 }
 
@@ -25,49 +23,18 @@ type manager struct {
 	client client.FusionComputeClient
 }
 
-func (m *manager) GetSite(siteUri string) (*Site, error) {
-	var site Site
-	api, err := m.client.GetApiClient()
-	if err != nil {
+func (m *manager) GetSite(ctx context.Context, siteUri string) (*Site, error) {
+	site := new(Site)
+	if err := client.Get(ctx, m.client, siteUri, site); err != nil {
 		return nil, err
 	}
-	resp, err := api.R().Get(siteUri)
-	if err != nil {
-		return nil, err
-	}
-	if resp.IsSuccess() {
-		err := json.Unmarshal(resp.Body(), &site)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		e := new(fcErr.Basic)
-		return nil, common.FormatHttpError(resp, e)
-	}
-
-	return &site, nil
+	return site, nil
 }
 
-func (m *manager) ListSite() ([]Site, error) {
-	var sites []Site
-	api, err := m.client.GetApiClient()
-	if err != nil {
+func (m *manager) ListSite(ctx context.Context) ([]Site, error) {
+	listSiteResponse := new(ListSiteResponse)
+	if err := client.Get(ctx, m.client, siteUrl, listSiteResponse); err != nil {
 		return nil, err
 	}
-	resp, err := api.R().Get(siteUrl)
-	if err != nil {
-		return nil, err
-	}
-	if resp.IsSuccess() {
-		var listSiteResponse ListSiteResponse
-		err := json.Unmarshal(resp.Body(), &listSiteResponse)
-		if err != nil {
-			return nil, err
-		}
-		sites = listSiteResponse.Sites
-	} else {
-		e := new(fcErr.Basic)
-		return nil, common.FormatHttpError(resp, e)
-	}
-	return sites, nil
+	return listSiteResponse.Sites, nil
 }

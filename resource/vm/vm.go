@@ -2,16 +2,15 @@ package vm
 
 import (
 	"bytes"
-	"encoding/json"
+	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"path"
 	"strconv"
 	"strings"
 
 	"github.com/lawyzheng/go-fusion-compute/client"
-	"github.com/lawyzheng/go-fusion-compute/internal/common"
-	fcErr "github.com/lawyzheng/go-fusion-compute/pkg/error"
 )
 
 const (
@@ -20,11 +19,11 @@ const (
 )
 
 type Manager interface {
-	ListVm(isTemplate bool) ([]Vm, error)
-	GetVM(vmUri string) (*Vm, error)
-	CloneVm(templateUri string, request CloneVmRequest) (*CloneVmResponse, error)
-	DeleteVm(vmUri string) (*DeleteVmResponse, error)
-	UploadImage(vmUri string, request ImportTemplateRequest) (*ImportTemplateResponse, error)
+	ListVm(ctx context.Context, isTemplate bool) ([]Vm, error)
+	GetVM(ctx context.Context, vmUri string) (*Vm, error)
+	CloneVm(ctx context.Context, templateUri string, request CloneVmRequest) (*CloneVmResponse, error)
+	DeleteVm(ctx context.Context, vmUri string) (*DeleteVmResponse, error)
+	UploadImage(ctx context.Context, vmUri string, request ImportTemplateRequest) (*ImportTemplateResponse, error)
 }
 
 func NewManager(client client.FusionComputeClient, siteUri string) Manager {
@@ -36,7 +35,7 @@ type manager struct {
 	siteUri string
 }
 
-func (m *manager) CloneVm(templateUri string, request CloneVmRequest) (*CloneVmResponse, error) {
+func (m *manager) CloneVm(ctx context.Context, templateUri string, request CloneVmRequest) (*CloneVmResponse, error) {
 	for n := range request.VmCustomization.NicSpecification {
 		if !strings.Contains(request.VmCustomization.NicSpecification[n].Netmask, ".") {
 			b, err := strconv.Atoi(request.VmCustomization.NicSpecification[0].Netmask)
@@ -51,7 +50,7 @@ func (m *manager) CloneVm(templateUri string, request CloneVmRequest) (*CloneVmR
 		}
 	}
 
-	vm, err := m.GetVM(templateUri)
+	vm, err := m.GetVM(ctx, templateUri)
 	if err != nil {
 		return nil, err
 	}
@@ -61,122 +60,53 @@ func (m *manager) CloneVm(templateUri string, request CloneVmRequest) (*CloneVmR
 			request.Config.Disks[0].QuantityGB = vm.VmConfig.Disks[0].QuantityGB
 		}
 	}
-	var cloneVmResponse CloneVmResponse
-	api, err := m.client.GetApiClient()
-	if err != nil {
+	cloneVmResponse := new(CloneVmResponse)
+	uri := path.Join(templateUri, "action", "clone")
+	if err := client.Post(ctx, m.client, uri, &request, cloneVmResponse); err != nil {
 		return nil, err
 	}
-	resp, err := api.R().SetBody(&request).Post(path.Join(templateUri, "action", "clone"))
-	if err != nil {
-		return nil, err
-	}
-	if resp.IsSuccess() {
-		err := json.Unmarshal(resp.Body(), &cloneVmResponse)
-		if err != nil {
-			return nil, err
-		}
-
-	} else {
-		e := new(fcErr.Basic)
-		return nil, common.FormatHttpError(resp, e)
-	}
-	return &cloneVmResponse, nil
+	return cloneVmResponse, nil
 }
 
-func (m *manager) ListVm(isTemplate bool) ([]Vm, error) {
-	var vms []Vm
-	api, err := m.client.GetApiClient()
-	if err != nil {
-		return nil, err
-	}
-	request := api.R()
+func (m *manager) ListVm(ctx context.Context, isTemplate bool) ([]Vm, error) {
+	u := new(url.URL)
+	u.Path = strings.Replace(vmUrl, siteMask, m.siteUri, -1)
 	if isTemplate {
-		request.SetQueryParam("isTemplate", "true")
+		v := new(url.Values)
+		v.Add("isTemplate", "true")
+		u.RawQuery = v.Encode()
 	}
-	resp, err := request.Get(strings.Replace(vmUrl, siteMask, m.siteUri, -1))
-	if err != nil {
+
+	listVmResponse := new(ListVmResponse)
+	if err := client.Get(ctx, m.client, u.String(), listVmResponse); err != nil {
 		return nil, err
 	}
-	if resp.IsSuccess() {
-		var listVmResponse ListVmResponse
-		err := json.Unmarshal(resp.Body(), &listVmResponse)
-		if err != nil {
-			return nil, err
-		}
-		vms = listVmResponse.Vms
-
-	} else {
-		e := new(fcErr.Basic)
-		return nil, common.FormatHttpError(resp, e)
-	}
-	return vms, nil
+	return listVmResponse.Vms, nil
 }
 
-func (m *manager) DeleteVm(vmUri string) (*DeleteVmResponse, error) {
-	var deleteVmResponse DeleteVmResponse
-	api, err := m.client.GetApiClient()
-	if err != nil {
+func (m *manager) DeleteVm(ctx context.Context, vmUri string) (*DeleteVmResponse, error) {
+	deleteVmResponse := new(DeleteVmResponse)
+	if err := client.Delete(ctx, m.client, vmUri, deleteVmResponse); err != nil {
 		return nil, err
 	}
-	resp, err := api.R().Delete(vmUri)
-	if err != nil {
-		return nil, err
-	}
-	if resp.IsSuccess() {
-		err := json.Unmarshal(resp.Body(), &deleteVmResponse)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		e := new(fcErr.Basic)
-		return nil, common.FormatHttpError(resp, e)
-	}
-	return &deleteVmResponse, nil
+	return deleteVmResponse, nil
 }
 
-func (m *manager) GetVM(vmUri string) (*Vm, error) {
-	var item Vm
-	api, err := m.client.GetApiClient()
-	if err != nil {
+func (m *manager) GetVM(ctx context.Context, vmUri string) (*Vm, error) {
+	vm := new(Vm)
+	if err := client.Get(ctx, m.client, vmUri, vm); err != nil {
 		return nil, err
 	}
-	resp, err := api.R().Get(vmUri)
-
-	if err != nil {
-		return nil, err
-	}
-	if resp.IsSuccess() {
-		err := json.Unmarshal(resp.Body(), &item)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		e := new(fcErr.Basic)
-		return nil, common.FormatHttpError(resp, e)
-	}
-	return &item, nil
+	return vm, nil
 }
 
-func (m *manager) UploadImage(vmUri string, request ImportTemplateRequest) (*ImportTemplateResponse, error) {
-	var res ImportTemplateResponse
-	api, err := m.client.GetApiClient()
-	if err != nil {
+func (m *manager) UploadImage(ctx context.Context, vmUri string, request ImportTemplateRequest) (*ImportTemplateResponse, error) {
+	res := new(ImportTemplateResponse)
+	uri := path.Join(vmUri, "action", "import")
+	if err := client.Post(ctx, m.client, uri, &request, res); err != nil {
 		return nil, err
 	}
-	resp, err := api.R().SetBody(&request).Post(path.Join(vmUri, "action", "import"))
-	if err != nil {
-		return nil, err
-	}
-	if resp.IsSuccess() {
-		err := json.Unmarshal(resp.Body(), &res)
-		if err != nil {
-			return nil, err
-		}
-		return &res, nil
-	} else {
-		e := new(fcErr.Basic)
-		return nil, common.FormatHttpError(resp, e)
-	}
+	return res, nil
 }
 
 func parseMask(num int) (mask string, err error) {

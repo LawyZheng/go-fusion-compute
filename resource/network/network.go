@@ -1,13 +1,11 @@
 package network
 
 import (
-	"encoding/json"
+	"context"
 	"path"
 	"strings"
 
 	"github.com/lawyzheng/go-fusion-compute/client"
-	"github.com/lawyzheng/go-fusion-compute/internal/common"
-	fcErr "github.com/lawyzheng/go-fusion-compute/pkg/error"
 	"github.com/lawyzheng/go-fusion-compute/resource/vm"
 )
 
@@ -19,10 +17,10 @@ const (
 )
 
 type Manager interface {
-	ListDVSwitch() ([]DVSwitch, error)
-	ListPortGroupBySwitch(dvSwitchIdUri string) ([]PortGroup, error)
-	ListPortGroupInUseIp(portGroupUrn string) ([]string, error)
-	ListPortGroup() ([]PortGroup, error)
+	ListDVSwitch(ctx context.Context) ([]DVSwitch, error)
+	ListPortGroupBySwitch(ctx context.Context, dvSwitchIdUri string) ([]PortGroup, error)
+	ListPortGroupInUseIp(ctx context.Context, portGroupUrn string) ([]string, error)
+	ListPortGroup(ctx context.Context) ([]PortGroup, error)
 }
 
 func NewManager(client client.FusionComputeClient, siteUri string) Manager {
@@ -34,99 +32,42 @@ type manager struct {
 	siteUri string
 }
 
-func (m *manager) ListPortGroup() ([]PortGroup, error) {
-	var portGroups []PortGroup
-	api, err := m.client.GetApiClient()
-	if err != nil {
+func (m *manager) ListPortGroup(ctx context.Context) ([]PortGroup, error) {
+	uri := strings.Replace(portGroupUrl, siteMask, m.siteUri, -1)
+	listPortGroupResponse := new(ListPortGroupResponse)
+	if err := client.Get(ctx, m.client, uri, listPortGroupResponse); err != nil {
 		return nil, err
 	}
-	resp, err := api.R().Get(strings.Replace(portGroupUrl, siteMask, m.siteUri, -1))
-	if err != nil {
-		return nil, err
-	}
-	if resp.IsSuccess() {
-		var listPortGroupResponse ListPortGroupResponse
-		err := json.Unmarshal(resp.Body(), &listPortGroupResponse)
-		if err != nil {
-			return nil, err
-		}
-		portGroups = listPortGroupResponse.PortGroups
-	} else {
-		e := new(fcErr.Basic)
-		return nil, common.FormatHttpError(resp, e)
-	}
-	return portGroups, nil
+	return listPortGroupResponse.PortGroups, nil
 }
 
-func (m *manager) ListPortGroupBySwitch(dvSwitchIdUri string) ([]PortGroup, error) {
-
-	var portGroups []PortGroup
-	api, err := m.client.GetApiClient()
-	if err != nil {
+func (m *manager) ListPortGroupBySwitch(ctx context.Context, dvSwitchIdUri string) ([]PortGroup, error) {
+	uri := path.Join(dvSwitchIdUri, "portgroups")
+	listPortGroupResponse := new(ListPortGroupResponse)
+	if err := client.Get(ctx, m.client, uri, listPortGroupResponse); err != nil {
 		return nil, err
 	}
-	resp, err := api.R().Get(path.Join(dvSwitchIdUri, "portgroups"))
-	if err != nil {
-		return nil, err
-	}
-	if resp.IsSuccess() {
-		var listPortGroupResponse ListPortGroupResponse
-		err := json.Unmarshal(resp.Body(), &listPortGroupResponse)
-		if err != nil {
-			return nil, err
-		}
-		portGroups = listPortGroupResponse.PortGroups
-	} else {
-		e := new(fcErr.Basic)
-		return nil, common.FormatHttpError(resp, e)
-	}
-	return portGroups, nil
+	return listPortGroupResponse.PortGroups, nil
 }
 
-func (m *manager) ListDVSwitch() ([]DVSwitch, error) {
-	var dvSwitchs []DVSwitch
-	api, err := m.client.GetApiClient()
-	if err != nil {
+func (m *manager) ListDVSwitch(ctx context.Context) ([]DVSwitch, error) {
+	uri := strings.Replace(dvSwitchUrl, siteMask, m.siteUri, -1)
+	listDVSwitchResponse := new(ListDVSwitchResponse)
+	if err := client.Get(ctx, m.client, uri, listDVSwitchResponse); err != nil {
 		return nil, err
 	}
-	resp, err := api.R().Get(strings.Replace(dvSwitchUrl, siteMask, m.siteUri, -1))
-	if err != nil {
-		return nil, err
-	}
-	if resp.IsSuccess() {
-		var listDVSwitchResponse ListDVSwitchResponse
-		err := json.Unmarshal(resp.Body(), &listDVSwitchResponse)
-		if err != nil {
-			return nil, err
-		}
-		dvSwitchs = listDVSwitchResponse.DVSwitchs
-	} else {
-		e := new(fcErr.Basic)
-		return nil, common.FormatHttpError(resp, e)
-	}
-	return dvSwitchs, nil
+	return listDVSwitchResponse.DVSwitchs, nil
 }
 
-func (m *manager) ListPortGroupInUseIp(portGroupUrn string) ([]string, error) {
+func (m *manager) ListPortGroupInUseIp(ctx context.Context, portGroupUrn string) ([]string, error) {
+	uri := strings.Replace(strings.Replace(vmScopeUrl, siteMask, m.siteUri, -1), "<resource_urn>", portGroupUrn, -1)
+	listVmResponse := new(vm.ListVmResponse)
+	if err := client.Get(ctx, m.client, uri, listVmResponse); err != nil {
+		return nil, err
+	}
+
 	var results []string
-	api, err := m.client.GetApiClient()
-	if err != nil {
-		return nil, err
-	}
-	resp, err := api.R().Get(strings.Replace(strings.Replace(vmScopeUrl, siteMask, m.siteUri, -1), "<resource_urn>", portGroupUrn, -1))
-	if err != nil {
-		return nil, err
-	}
-	var vms []vm.Vm
-	if resp.IsSuccess() {
-		var listVmResponse vm.ListVmResponse
-		err := json.Unmarshal(resp.Body(), &listVmResponse)
-		if err != nil {
-			return nil, err
-		}
-		vms = listVmResponse.Vms
-	}
-	for _, v := range vms {
+	for _, v := range listVmResponse.Vms {
 		for _, nic := range v.VmConfig.Nics {
 			if nic.Ip != "0.0.0.0" {
 				results = append(results, nic.Ip)

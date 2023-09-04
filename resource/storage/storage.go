@@ -1,12 +1,10 @@
 package storage
 
 import (
-	"encoding/json"
+	"context"
 	"strings"
 
 	"github.com/lawyzheng/go-fusion-compute/client"
-	"github.com/lawyzheng/go-fusion-compute/internal/common"
-	fcErr "github.com/lawyzheng/go-fusion-compute/pkg/error"
 )
 
 const (
@@ -14,11 +12,11 @@ const (
 	datastoreUrl = "<site_uri>/datastores"
 )
 
-type Interface interface {
-	ListDataStore() ([]Datastore, error)
+type Manager interface {
+	ListDataStore(ctx context.Context) ([]Datastore, error)
 }
 
-func NewManager(client client.FusionComputeClient, siteUri string) Interface {
+func NewManager(client client.FusionComputeClient, siteUri string) Manager {
 	return &manager{client: client, siteUri: siteUri}
 }
 
@@ -27,26 +25,12 @@ type manager struct {
 	siteUri string
 }
 
-func (m *manager) ListDataStore() ([]Datastore, error) {
-	var adapters []Datastore
-	api, err := m.client.GetApiClient()
-	if err != nil {
+func (m *manager) ListDataStore(ctx context.Context) ([]Datastore, error) {
+	listAdapterResponse := new(ListDataStoreResponse)
+	uri := strings.Replace(datastoreUrl, siteMask, m.siteUri, -1)
+	if err := client.Get(ctx, m.client, uri, listAdapterResponse); err != nil {
 		return nil, err
 	}
-	resp, err := api.R().Get(strings.Replace(datastoreUrl, siteMask, m.siteUri, -1))
-	if err != nil {
-		return nil, err
-	}
-	if resp.IsSuccess() {
-		var listAdapterResponse ListDataStoreResponse
-		err := json.Unmarshal(resp.Body(), &listAdapterResponse)
-		if err != nil {
-			return nil, err
-		}
-		adapters = listAdapterResponse.Datastores
-	} else {
-		e := new(fcErr.Basic)
-		return nil, common.FormatHttpError(resp, e)
-	}
-	return adapters, nil
+
+	return listAdapterResponse.Datastores, nil
 }

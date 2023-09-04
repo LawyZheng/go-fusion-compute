@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -24,7 +25,7 @@ func TestManager_List(t *testing.T) {
 	}
 	for _, s := range ss {
 		cm := NewManager(c, s.Uri)
-		cs, err := cm.ListCluster()
+		cs, err := cm.ListCluster(context.Background())
 		if err != nil {
 			log.Fatal(err)
 		}

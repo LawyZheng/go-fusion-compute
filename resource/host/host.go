@@ -28,7 +28,7 @@ type manager struct {
 func (m *manager) ListHosts(ctx context.Context) ([]Host, error) {
 	uri := strings.Replace(hostUrl, siteMask, m.siteUri, -1)
 
-	list := new(listHostsResponse)
+	list := new(ListHostsResponse)
 	if err := client.Get(ctx, m.client, uri, list); err != nil {
 		return nil, err
 	}

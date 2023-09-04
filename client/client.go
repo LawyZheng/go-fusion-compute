@@ -142,7 +142,7 @@ func GetWithError[S any, E fcErr.Error](ctx context.Context, client FusionComput
 		req = req.SetContext(ctx)
 	}
 
-	return do(req, resty.MethodGet, uri, success, failed)
+	return DoWithError(req, resty.MethodGet, uri, success, failed)
 }
 
 func Post[S any](ctx context.Context, client FusionComputeClient, uri string, body interface{}, success *S) error {
@@ -165,7 +165,7 @@ func PostWithError[S any, E fcErr.Error](ctx context.Context, client FusionCompu
 		req = req.SetBody(body)
 	}
 
-	return do(req, resty.MethodPost, uri, success, failed)
+	return DoWithError(req, resty.MethodPost, uri, success, failed)
 }
 
 func Delete[S any](ctx context.Context, client FusionComputeClient, uri string, success *S) error {
@@ -184,10 +184,15 @@ func DeleteWithError[S any, E fcErr.Error](ctx context.Context, client FusionCom
 		req = req.SetContext(ctx)
 	}
 
-	return do(req, resty.MethodDelete, uri, success, failed)
+	return DoWithError(req, resty.MethodDelete, uri, success, failed)
 }
 
-func do[S any, E fcErr.Error](req *resty.Request, method, uri string, success *S, failed E) error {
+func Do[S any](req *resty.Request, method, uri string, success *S) error {
+	e := new(fcErr.Basic)
+	return DoWithError(req, method, uri, success, e)
+}
+
+func DoWithError[S any, E fcErr.Error](req *resty.Request, method, uri string, success *S, failed E) error {
 	resp, err := req.Execute(method, uri)
 	if err != nil {
 		return err

@@ -1,6 +1,6 @@
 package host
 
-type listHostsResponse struct {
+type ListHostsResponse struct {
 	Hosts []Host `json:"hosts"`
 	Total int    `json:"total"`
 }
