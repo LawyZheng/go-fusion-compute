@@ -115,7 +115,7 @@ func (f *fusionComputeClient) GetApiClient() (*resty.Client, error) {
 	}
 	f.setDefaultHeader(r)
 	r.SetHeader(XAuthToken, string(f.GetSession())).
-		SetHostURL(f.host)
+		SetBaseURL(f.host)
 	return r, nil
 }
 
