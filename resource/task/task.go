@@ -1,16 +1,13 @@
 package task
 
 import (
-	"encoding/json"
-	"path"
+	"context"
 
 	"github.com/lawyzheng/go-fusion-compute/client"
-	"github.com/lawyzheng/go-fusion-compute/internal/common"
-	fcErr "github.com/lawyzheng/go-fusion-compute/pkg/error"
 )
 
 type Manager interface {
-	Get(taskUri string) (*Task, error)
+	Get(ctx context.Context, taskUri string) (*Task, error)
 }
 
 func NewManager(client client.FusionComputeClient, siteUri string) Manager {
@@ -22,24 +19,10 @@ type manager struct {
 	siteUri string
 }
 
-func (m *manager) Get(taskUri string) (*Task, error) {
-	var task Task
-	api, err := m.client.GetApiClient()
-	if err != nil {
+func (m *manager) Get(ctx context.Context, taskUri string) (*Task, error) {
+	task := new(Task)
+	if err := client.Get(ctx, m.client, taskUri, task); err != nil {
 		return nil, err
 	}
-	resp, err := api.R().Get(path.Join(taskUri))
-	if err != nil {
-		return nil, err
-	}
-	if resp.IsSuccess() {
-		err := json.Unmarshal(resp.Body(), &task)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		e := new(fcErr.Basic)
-		return nil, common.FormatHttpError(resp, e)
-	}
-	return &task, nil
+	return task, nil
 }
