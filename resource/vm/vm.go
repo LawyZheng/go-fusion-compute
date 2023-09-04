@@ -72,8 +72,8 @@ func (m *manager) ListVm(ctx context.Context, isTemplate bool) ([]Vm, error) {
 	u := new(url.URL)
 	u.Path = strings.Replace(vmUrl, siteMask, m.siteUri, -1)
 	if isTemplate {
-		v := new(url.Values)
-		v.Add("isTemplate", "true")
+		v := url.Values{}
+		v.Set("isTemplate", "true")
 		u.RawQuery = v.Encode()
 	}
 
