@@ -2,7 +2,6 @@ package snapshot
 
 import (
 	"context"
-	"strings"
 
 	"github.com/lawyzheng/go-fusion-compute/client"
 )
@@ -13,31 +12,27 @@ const (
 )
 
 type Manager interface {
-	CreateSnapshot(ctx context.Context, req *CreateSnapshotReq) (*Task, error)
+	CreateSnapshot(ctx context.Context, vmUri string, req *CreateSnapshotReq) (*Task, error)
 	DeleteSnapshot(ctx context.Context, snapshotUri string) (*Task, error)
 	GetSnapshotDetail(ctx context.Context, snapshotUri string) (*SnapshotDetail, error)
-	GetCurrentSnapshot(ctx context.Context) (*SnapshotBrief, error)
-	ListSnapshots(ctx context.Context) (*ListSnapshotsResponse, error)
+	GetCurrentSnapshot(ctx context.Context, vmUri string) (*SnapshotBrief, error)
+	ListSnapshots(ctx context.Context, vmUri string) (*ListSnapshotsResponse, error)
 }
 
-func NewManager(client client.FusionComputeClient, vmUri string) Manager {
-	return &manager{vmUri: vmUri, client: client}
+func NewManager(client client.FusionComputeClient) Manager {
+	return &manager{client: client}
 }
 
 type manager struct {
-	vmUri  string
 	client client.FusionComputeClient
 }
 
-func (m *manager) CreateSnapshot(ctx context.Context, req *CreateSnapshotReq) (*Task, error) {
+func (m *manager) CreateSnapshot(ctx context.Context, vmUri string, req *CreateSnapshotReq) (*Task, error) {
 	if err := req.Validate(); err != nil {
 		return nil, err
 	}
-
-	uri := strings.Replace(snapshotUrl, vmMask, m.vmUri, -1)
-
 	task := new(Task)
-	if err := client.Post(ctx, m.client, uri, req, task); err != nil {
+	if err := client.Post(ctx, m.client, vmUri, req, task); err != nil {
 		return nil, err
 	}
 
@@ -60,8 +55,8 @@ func (m *manager) GetSnapshotDetail(ctx context.Context, snapshotUri string) (*S
 	return snapshot, nil
 }
 
-func (m *manager) GetCurrentSnapshot(ctx context.Context) (*SnapshotBrief, error) {
-	snapshots, err := m.ListSnapshots(ctx)
+func (m *manager) GetCurrentSnapshot(ctx context.Context, vmUri string) (*SnapshotBrief, error) {
+	snapshots, err := m.ListSnapshots(ctx, vmUri)
 	if err != nil {
 		return nil, err
 	}
@@ -69,10 +64,9 @@ func (m *manager) GetCurrentSnapshot(ctx context.Context) (*SnapshotBrief, error
 	return &snapshots.CurrentSnapshot, nil
 }
 
-func (m *manager) ListSnapshots(ctx context.Context) (*ListSnapshotsResponse, error) {
-	uri := strings.Replace(snapshotUrl, vmMask, m.vmUri, -1)
+func (m *manager) ListSnapshots(ctx context.Context, vmUri string) (*ListSnapshotsResponse, error) {
 	data := new(ListSnapshotsResponse)
-	if err := client.Get(ctx, m.client, uri, data); err != nil {
+	if err := client.Get(ctx, m.client, vmUri, data); err != nil {
 		return nil, err
 	}
 
