@@ -19,20 +19,19 @@ const (
 )
 
 type Manager interface {
-	ListVm(ctx context.Context, isTemplate bool) ([]Vm, error)
+	ListVm(ctx context.Context, siteUri string, isTemplate bool) ([]Vm, error)
 	GetVM(ctx context.Context, vmUri string) (*Vm, error)
 	CloneVm(ctx context.Context, templateUri string, request CloneVmRequest) (*CloneVmResponse, error)
 	DeleteVm(ctx context.Context, vmUri string) (*DeleteVmResponse, error)
 	UploadImage(ctx context.Context, vmUri string, request ImportTemplateRequest) (*ImportTemplateResponse, error)
 }
 
-func NewManager(client client.FusionComputeClient, siteUri string) Manager {
-	return &manager{client: client, siteUri: siteUri}
+func NewManager(client client.FusionComputeClient) Manager {
+	return &manager{client: client}
 }
 
 type manager struct {
-	client  client.FusionComputeClient
-	siteUri string
+	client client.FusionComputeClient
 }
 
 func (m *manager) CloneVm(ctx context.Context, templateUri string, request CloneVmRequest) (*CloneVmResponse, error) {
@@ -68,9 +67,9 @@ func (m *manager) CloneVm(ctx context.Context, templateUri string, request Clone
 	return cloneVmResponse, nil
 }
 
-func (m *manager) ListVm(ctx context.Context, isTemplate bool) ([]Vm, error) {
+func (m *manager) ListVm(ctx context.Context, siteUri string, isTemplate bool) ([]Vm, error) {
 	u := new(url.URL)
-	u.Path = strings.Replace(vmUrl, siteMask, m.siteUri, -1)
+	u.Path = strings.Replace(vmUrl, siteMask, siteUri, -1)
 	if isTemplate {
 		v := url.Values{}
 		v.Set("isTemplate", "true")

@@ -37,6 +37,7 @@ type SnapshotDetail struct {
 		VolumeUrn      string `json:"volumeUrn"`
 		VolumeUri      string `json:"volumeUri"`
 		SnapUUID       string `json:"snapUuid"`
+		SnapshotInner  string `json:"snapshotInner"`
 		StorageType    string `json:"storageType"`
 		DatastoreUrn   string `json:"datastoreUrn"`
 		SnapNameOneDev string `json:"snapNameOnDev"`

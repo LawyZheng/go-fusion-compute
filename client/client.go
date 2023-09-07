@@ -14,8 +14,8 @@ import (
 type Session string
 
 type FusionComputeClient interface {
-	Connect() error
-	DisConnect() error
+	Connect(context.Context) error
+	DisConnect(context.Context) error
 	SetSession(token string)
 	GetSession() Session
 	GetHost() string
@@ -77,18 +77,18 @@ func (f *fusionComputeClient) GetSession() Session {
 	return f.session
 }
 
-func (f *fusionComputeClient) Connect() error {
+func (f *fusionComputeClient) Connect(ctx context.Context) error {
 	a := NewAuth(f)
-	err := a.Login()
+	err := a.Login(ctx)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (f *fusionComputeClient) DisConnect() error {
+func (f *fusionComputeClient) DisConnect(ctx context.Context) error {
 	a := NewAuth(f)
-	err := a.Logout()
+	err := a.Logout(ctx)
 	if err != nil {
 		return err
 	}

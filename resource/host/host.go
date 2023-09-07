@@ -13,20 +13,19 @@ const (
 )
 
 type Manager interface {
-	ListHosts(ctx context.Context) ([]Host, error)
+	ListHosts(ctx context.Context, siteUri string) ([]Host, error)
 }
 
-func NewManager(siteUri string, client client.FusionComputeClient) Manager {
-	return &manager{siteUri: siteUri, client: client}
+func NewManager(client client.FusionComputeClient) Manager {
+	return &manager{client: client}
 }
 
 type manager struct {
-	siteUri string
-	client  client.FusionComputeClient
+	client client.FusionComputeClient
 }
 
-func (m *manager) ListHosts(ctx context.Context) ([]Host, error) {
-	uri := strings.Replace(hostUrl, siteMask, m.siteUri, -1)
+func (m *manager) ListHosts(ctx context.Context, siteUri string) ([]Host, error) {
+	uri := strings.Replace(hostUrl, siteMask, siteUri, -1)
 
 	list := new(ListHostsResponse)
 	if err := client.Get(ctx, m.client, uri, list); err != nil {
