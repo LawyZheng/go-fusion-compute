@@ -12,6 +12,8 @@ const (
 	hostUrl  = "<site_uri>/hosts"
 )
 
+var _ Manager = (*manager)(nil)
+
 type Manager interface {
 	ListHosts(ctx context.Context, siteUri string) ([]Host, error)
 }

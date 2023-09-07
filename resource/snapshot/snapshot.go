@@ -2,6 +2,7 @@ package snapshot
 
 import (
 	"context"
+	"strings"
 
 	"github.com/lawyzheng/go-fusion-compute/client"
 )
@@ -10,6 +11,8 @@ const (
 	vmMask      = "<vm_uri>"
 	snapshotUrl = "<vm_uri>/snapshots"
 )
+
+var _ Manager = (*manager)(nil)
 
 type Manager interface {
 	CreateSnapshot(ctx context.Context, vmUri string, req *CreateSnapshotReq) (*Task, error)
@@ -31,8 +34,9 @@ func (m *manager) CreateSnapshot(ctx context.Context, vmUri string, req *CreateS
 	if err := req.Validate(); err != nil {
 		return nil, err
 	}
+	uri := strings.Replace(snapshotUrl, vmMask, vmUri, -1)
 	task := new(Task)
-	if err := client.Post(ctx, m.client, vmUri, req, task); err != nil {
+	if err := client.Post(ctx, m.client, uri, req, task); err != nil {
 		return nil, err
 	}
 
@@ -66,7 +70,8 @@ func (m *manager) GetCurrentSnapshot(ctx context.Context, vmUri string) (*Snapsh
 
 func (m *manager) ListSnapshots(ctx context.Context, vmUri string) (*ListSnapshotsResponse, error) {
 	data := new(ListSnapshotsResponse)
-	if err := client.Get(ctx, m.client, vmUri, data); err != nil {
+	uri := strings.Replace(snapshotUrl, vmMask, vmUri, -1)
+	if err := client.Get(ctx, m.client, uri, data); err != nil {
 		return nil, err
 	}
 

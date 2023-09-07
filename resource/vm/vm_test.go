@@ -14,11 +14,11 @@ import (
 
 func TestManager_List(t *testing.T) {
 	c := client.NewFusionComputeClient("https://100.199.16.208:7443", "kubeoperator", "Calong@2015")
-	err := c.Connect()
+	err := c.Connect(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer c.DisConnect()
+	defer c.DisConnect(context.Background())
 
 	sm := site.NewManager(c)
 	ss, err := sm.ListSite(context.Background())
@@ -26,8 +26,8 @@ func TestManager_List(t *testing.T) {
 		log.Fatal(err)
 	}
 	for _, s := range ss {
-		cm := NewManager(c, s.Uri)
-		cs, err := cm.ListVm(context.Background(), true)
+		cm := NewManager(c)
+		cs, err := cm.ListVm(context.Background(), s.Uri, true)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -37,12 +37,13 @@ func TestManager_List(t *testing.T) {
 
 func TestManager_CloneVm(t *testing.T) {
 	c := client.NewFusionComputeClient("https://100.199.16.208:7443", "kubeoperator", "Calong@2015")
-	err := c.Connect()
+	err := c.Connect(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer c.DisConnect()
-	m := NewManager(c, "/service/sites/43BC08E8")
+	defer c.DisConnect(context.Background())
+	_ = "/service/sites/43BC08E8"
+	m := NewManager(c)
 	ts, err := m.CloneVm(context.Background(),
 		"/service/sites/43BC08E8/vms/i-00000034", CloneVmRequest{
 			Name:          "test-1",
@@ -96,7 +97,7 @@ func TestManager_CloneVm(t *testing.T) {
 	fmt.Printf("create vm %s", ts.Uri)
 	fmt.Printf("task uri  %s", ts.TaskUri)
 
-	tm := task.NewManager(c, "/service/sites/43BC08E8")
+	tm := task.NewManager(c)
 	for {
 		tt, err := tm.Get(context.Background(), ts.TaskUri)
 		if err != nil {

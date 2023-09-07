@@ -18,6 +18,8 @@ const (
 	vmUrl    = "<site_uri>/vms"
 )
 
+var _ Manager = (*manager)(nil)
+
 type Manager interface {
 	ListVm(ctx context.Context, siteUri string, isTemplate bool) ([]Vm, error)
 	GetVM(ctx context.Context, vmUri string) (*Vm, error)

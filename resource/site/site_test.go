@@ -11,11 +11,11 @@ import (
 
 func TestManager_List(t *testing.T) {
 	c := client.NewFusionComputeClient("https://100.199.16.208:7443", "kubeoperator", "Calong@2015")
-	err := c.Connect()
+	err := c.Connect(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer c.DisConnect()
+	defer c.DisConnect(context.Background())
 	m := NewManager(c)
 	ss, err := m.ListSite(context.Background())
 	if err != nil {

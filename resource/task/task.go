@@ -6,17 +6,18 @@ import (
 	"github.com/lawyzheng/go-fusion-compute/client"
 )
 
+var _ Manager = (*manager)(nil)
+
 type Manager interface {
 	Get(ctx context.Context, taskUri string) (*Task, error)
 }
 
-func NewManager(client client.FusionComputeClient, siteUri string) Manager {
-	return &manager{client: client, siteUri: siteUri}
+func NewManager(client client.FusionComputeClient) Manager {
+	return &manager{client: client}
 }
 
 type manager struct {
-	client  client.FusionComputeClient
-	siteUri string
+	client client.FusionComputeClient
 }
 
 func (m *manager) Get(ctx context.Context, taskUri string) (*Task, error) {

@@ -24,8 +24,8 @@ func TestManager_List(t *testing.T) {
 		log.Fatal(err)
 	}
 	for _, s := range ss {
-		cm := NewManager(c, s.Uri)
-		cs, err := cm.ListDataStore(context.Background())
+		cm := NewManager(c)
+		cs, err := cm.ListDataStore(context.Background(), s.Uri)
 		if err != nil {
 			log.Fatal(err)
 		}
