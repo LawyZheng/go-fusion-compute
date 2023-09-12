@@ -10,7 +10,7 @@ import (
 )
 
 type Vm struct {
-	Urn                string            `json:"urn,omitempty,omitempty"`
+	Urn                string            `json:"urn,omitempty"`
 	Uri                string            `json:"uri,omitempty"`
 	Uuid               string            `json:"uuid,omitempty"`
 	Name               string            `json:"name,omitempty"`
