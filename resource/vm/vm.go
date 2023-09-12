@@ -23,6 +23,8 @@ var _ Manager = (*manager)(nil)
 type Manager interface {
 	ListVm(ctx context.Context, siteUri string, isTemplate bool) ([]Vm, error)
 	GetVM(ctx context.Context, vmUri string) (*Vm, error)
+	GetVMById(ctx context.Context, vmId string) (*Vm, error)
+	CreateVM(ctx context.Context, siteUri string, request CreateVMRequest) (*Task, error)
 	CloneVm(ctx context.Context, templateUri string, request CloneVmRequest) (*CloneVmResponse, error)
 	DeleteVm(ctx context.Context, vmUri string) (*DeleteVmResponse, error)
 	UploadImage(ctx context.Context, vmUri string, request ImportTemplateRequest) (*ImportTemplateResponse, error)
@@ -34,6 +36,16 @@ func NewManager(client client.FusionComputeClient) Manager {
 
 type manager struct {
 	client client.FusionComputeClient
+}
+
+func (m *manager) CreateVM(ctx context.Context, siteUri string, request CreateVMRequest) (*Task, error) {
+	request.VMConfig.ClearConfig()
+	uri := strings.Replace(vmUrl, siteMask, siteUri, -1)
+	task := new(Task)
+	if err := client.Post(ctx, m.client, uri, request, task); err != nil {
+		return nil, err
+	}
+	return task, nil
 }
 
 func (m *manager) CloneVm(ctx context.Context, templateUri string, request CloneVmRequest) (*CloneVmResponse, error) {
@@ -99,6 +111,14 @@ func (m *manager) GetVM(ctx context.Context, vmUri string) (*Vm, error) {
 		return nil, err
 	}
 	return vm, nil
+}
+
+func (m *manager) GetVMById(ctx context.Context, vmId string) (*Vm, error) {
+	vmUri, err := searchVmById(ctx, m.client, m, vmId)
+	if err != nil {
+		return nil, err
+	}
+	return m.GetVM(ctx, vmUri)
 }
 
 func (m *manager) UploadImage(ctx context.Context, vmUri string, request ImportTemplateRequest) (*ImportTemplateResponse, error) {

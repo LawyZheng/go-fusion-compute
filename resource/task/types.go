@@ -29,3 +29,8 @@ type Task struct {
 func (t *Task) IsDone() bool {
 	return t.Status == SUCCESS || t.Status == FAILED
 }
+
+type TaskResult struct {
+	Task
+	Err error
+}

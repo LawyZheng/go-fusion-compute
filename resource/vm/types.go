@@ -1,36 +1,68 @@
 package vm
 
+import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/lawyzheng/go-fusion-compute/client"
+	"github.com/lawyzheng/go-fusion-compute/resource/site"
+)
+
 type Vm struct {
-	Urn                string   `json:"urn,omitempty,omitempty"`
-	Uri                string   `json:"uri,omitempty"`
-	Uuid               string   `json:"uuid,omitempty"`
-	Name               string   `json:"name,omitempty"`
-	Arch               string   `json:"arch,omitempty"`
-	Description        string   `json:"description,omitempty"`
-	Group              string   `json:"group,omitempty"`
-	Location           string   `json:"location,omitempty"`
-	LocationName       string   `json:"locationName,omitempty"`
-	HostUrn            string   `json:"hostUrn,omitempty"`
-	Status             string   `json:"status,omitempty"`
-	PvDriverStatus     string   `json:"pvDriverStatus,omitempty"`
-	ToolInstallStatus  string   `json:"toolInstallStatus,omitempty"`
-	CdRomStatus        string   `json:"cdRomStatus,omitempty"`
-	IsTemplate         bool     `json:"isTemplate,omitempty"`
-	IsLinkClone        bool     `json:"isLinkClone,omitempty"`
-	IsBindingHost      bool     `json:"isBindingHost,omitempty"`
-	IsMultiDiskSpeedup bool     `json:"isMultiDiskSpeedup,omitempty"`
-	CreateTime         string   `json:"createTime,omitempty"`
-	ToolsVersion       string   `json:"toolsVersion,omitempty"`
-	HostName           string   `json:"hostName,omitempty"`
-	ClusterName        string   `json:"clusterName,omitempty"`
-	HugePage           string   `json:"hugePage,omitempty"`
-	Idle               int      `json:"idle,omitempty"`
-	VmType             int      `json:"vmType,omitempty"`
-	DrStatus           int      `json:"drStatus,omitempty"`
-	RpoStatus          int      `json:"rpoStatus,omitempty"`
-	InitSyncStatus     int      `json:"initSyncStatus,omitempty"`
-	VmConfig           Config   `json:"vmConfig,omitempty"`
-	OsOption           OsOption `json:"osOptions,omitempty"`
+	Urn                string            `json:"urn,omitempty,omitempty"`
+	Uri                string            `json:"uri,omitempty"`
+	Uuid               string            `json:"uuid,omitempty"`
+	Name               string            `json:"name,omitempty"`
+	Arch               string            `json:"arch,omitempty"`
+	Description        string            `json:"description,omitempty"`
+	Group              string            `json:"group,omitempty"`
+	Location           string            `json:"location,omitempty"`
+	LocationName       string            `json:"locationName,omitempty"`
+	HostUrn            string            `json:"hostUrn,omitempty"`
+	Status             string            `json:"status,omitempty"`
+	PvDriverStatus     string            `json:"pvDriverStatus,omitempty"`
+	ToolInstallStatus  string            `json:"toolInstallStatus,omitempty"`
+	CdRomStatus        string            `json:"cdRomStatus,omitempty"`
+	IsTemplate         bool              `json:"isTemplate,omitempty"`
+	IsLinkClone        bool              `json:"isLinkClone,omitempty"`
+	IsBindingHost      bool              `json:"isBindingHost,omitempty"`
+	IsMultiDiskSpeedup bool              `json:"isMultiDiskSpeedup,omitempty"`
+	CreateTime         string            `json:"createTime,omitempty"`
+	ToolsVersion       string            `json:"toolsVersion,omitempty"`
+	HostName           string            `json:"hostName,omitempty"`
+	ClusterName        string            `json:"clusterName,omitempty"`
+	HugePage           string            `json:"hugePage,omitempty"`
+	Idle               int               `json:"idle,omitempty"`
+	VmType             int               `json:"vmType,omitempty"`
+	DrStatus           int               `json:"drStatus,omitempty"`
+	RpoStatus          int               `json:"rpoStatus,omitempty"`
+	InitSyncStatus     int               `json:"initSyncStatus,omitempty"`
+	ObjectPrivs        []string          `json:"objectPrivs,omitempty"`
+	Params             map[string]string `json:"params,omitempty"`
+	CustomProperties   map[string]string `json:"customProperties,omitempty"`
+	RebootConfig       RebootConfig      `json:"vmRebootConfig,omitempty"`
+	HAConfig           HAConfig          `json:"haConfig,omitempty"`
+	VmConfig           Config            `json:"vmConfig,omitempty"`
+	OsOption           OsOption          `json:"osOptions,omitempty"`
+}
+
+type RebootConfig struct {
+	Cpu    Cpu    `json:"cpu,omitempty"`
+	Memory Memory `json:"memory,omitempty"`
+}
+
+type HAConfig struct {
+	HostFaultPolicy int `json:"hostFaultPolicy,omitempty"`
+	VMFaultPolicy   int `json:"vmFaultPolicy,omitempty"`
+}
+
+type OsOption struct {
+	OsType      string `json:"osType,omitempty"`
+	OsVersion   int    `json:"osVersion,omitempty"`
+	Hostname    string `json:"hostname,omitempty"`
+	Password    string `json:"password,omitempty"`
+	GuestOSName string `json:"guestOSName,omitempty"`
 }
 
 type Customization struct {
@@ -66,12 +98,34 @@ type CloneVmRequest struct {
 }
 
 type Config struct {
-	Cpu      Cpu      `json:"cpu,omitempty"`
-	Memory   Memory   `json:"memory,omitempty"`
-	Disks    []Disk   `json:"disks,omitempty"`
-	Nics     []Nic    `json:"nics,omitempty"`
-	Property Property `json:"properties"`
+	Cpu          Cpu             `json:"cpu,omitempty"`
+	Memory       Memory          `json:"memory,omitempty"`
+	Disks        []Disk          `json:"disks,omitempty"`
+	Nics         []Nic           `json:"nics,omitempty"`
+	Property     Property        `json:"properties"`
+	USB          []USBController `json:"usb"`
+	NUMANodes    int             `json:"numaNodes"`
+	GraphicsCard struct {
+		Size int    `json:"size"`
+		Type string `json:"type"`
+	} `json:"graphicsCard"`
 }
+
+func (c *Config) ClearConfig() {
+	for i := range c.Nics {
+		c.Nics[i].ClearPrivate()
+	}
+
+	for i := range c.Disks {
+		c.Disks[i].ClearPrivate()
+	}
+}
+
+type USBController struct {
+	ControllerType string   `json:"controllerType"`
+	Device         []string `json:"device"`
+}
+
 type Cpu struct {
 	Quantity        int    `json:"quantity,omitempty"`
 	Reservation     int    `json:"reservation,omitempty"`
@@ -84,7 +138,7 @@ type Cpu struct {
 	CPUBindType     string `json:"cpuBindType,omitempty"`
 	NumaBinds       []struct {
 		NodeId int    `json:"nodeId,omitempty"`
-		vCPUs  string `json:"vcpus,omitempty"`
+		VCPUs  string `json:"vcpus,omitempty"`
 	} `json:"numaBinds,omitempty"`
 }
 
@@ -130,6 +184,17 @@ type Disk struct {
 	DataCopy        bool   `json:"dataCopy,omitempty"`
 }
 
+func (d *Disk) IsRBD() bool {
+	return d.StorageType == "FusionOneStorage"
+}
+
+func (d *Disk) ClearPrivate() {
+	d.VolumeUUID = ""
+	d.VolumeUrn = ""
+	d.VolumeURL = ""
+	d.DiskName = ""
+}
+
 type Nic struct {
 	Name          string `json:"name,omitempty"`
 	PortGroupUrn  string `json:"portGroupUrn,omitempty"`
@@ -152,6 +217,13 @@ type Nic struct {
 	BootOrder           int      `json:"bootOrder,omitempty"`
 	EnableSecurityGroup bool     `json:"enableSecurityGroup,omitempty"`
 	SecurityGroupName   string   `json:"securityGroupName,omitempty"`
+}
+
+func (n *Nic) ClearPrivate() {
+	n.Mac = ""
+	n.IP = ""
+	n.IPList = ""
+	n.Ips6 = []string{}
 }
 
 type Property struct {
@@ -202,15 +274,52 @@ type ImportTemplateRequest struct {
 	IsTemplate  bool     `json:"isTemplate,omitempty"`
 }
 
-type OsOption struct {
-	OsType      string `json:"osType,omitempty"`
-	OsVersion   int    `json:"osVersion,omitempty"`
-	Hostname    string `json:"hostname,omitempty"`
-	Password    string `json:"password,omitempty"`
-	GuestOSName string `json:"guestOSName,omitempty"`
-}
-
 type ImportTemplateResponse struct {
 	TaskUrn string `json:"taskUrn,omitempty"`
 	TaskUri string `json:"taskUri,omitempty"`
+}
+
+type CreateVMRequest struct {
+	Name          string       `json:"name,omitempty"`
+	Description   string       `json:"description,omitempty"`
+	Group         string       `json:"group,omitempty"`
+	Location      string       `json:"location,omitempty"`
+	IsBindingHost bool         `json:"isBindingHost,omitempty"`
+	AutoBoot      bool         `json:"autoBoot"`
+	VMConfig      Config       `json:"vmConfig,omitempty"`
+	OsOptions     OsOption     `json:"osOptions,omitempty"`
+	RebootConfig  RebootConfig `json:"vmRebootConfig,omitempty"`
+	HAConfig      HAConfig     `json:"haConfig,omitempty"`
+}
+
+type Task struct {
+	Urn     string `json:"urn"`
+	Uri     string `json:"uri"`
+	TaskUrn string `json:"taskUrn"`
+	TaskUri string `json:"taskUri"`
+}
+
+func searchVmById(ctx context.Context, c client.FusionComputeClient, vmM Manager, vmId string) (string, error) {
+	siteM := site.NewManager(c)
+	sites, err := siteM.ListSite(ctx)
+	if err != nil {
+		return "", err
+	}
+	for _, s := range sites {
+		vms, err := vmM.ListVm(ctx, s.Uri, false)
+		if err != nil {
+			return "", err
+		}
+
+		for _, v := range vms {
+			l := strings.Split(v.Urn, ":")
+			if len(l) == 0 {
+				continue
+			}
+			if l[len(l)-1] == vmId {
+				return v.Uri, nil
+			}
+		}
+	}
+	return "", fmt.Errorf("vm[%s] not found", vmId)
 }
