@@ -26,28 +26,30 @@ type ListSnapshotsResponse struct {
 }
 
 type SnapshotDetail struct {
-	Urn          string `json:"urn"`
-	Uri          string `json:"uri"`
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	CreateTime   string `json:"createTime"`
-	Status       string `json:"status"`
-	Type         string `json:"type"`
-	VolSnapshots []struct {
-		VolumeUrn      string `json:"volumeUrn"`
-		VolumeUri      string `json:"volumeUri"`
-		SnapUUID       string `json:"snapUuid"`
-		SnapshotInner  string `json:"snapshotInner"`
-		StorageType    string `json:"storageType"`
-		DatastoreUrn   string `json:"datastoreUrn"`
-		SnapNameOneDev string `json:"snapNameOnDev"`
-		ChgID          string `json:"chgID"`
-	} `json:"volsnapshots"`
-	SnapProvisionSize       int64 `json:"snapProvisionSize"`
-	CoreNum                 int64 `json:"coreNum"`
-	MemorySize              int64 `json:"memorySize"`
-	VolumeSizeSum           int64 `json:"volumeSizeSum"`
-	IncludingMemorySnapshot bool  `json:"includingMemorySnapshot"`
+	Urn                     string        `json:"urn"`
+	Uri                     string        `json:"uri"`
+	Name                    string        `json:"name"`
+	Description             string        `json:"description"`
+	CreateTime              string        `json:"createTime"`
+	Status                  string        `json:"status"`
+	Type                    string        `json:"type"`
+	VolSnapshots            []VolSnapshot `json:"volsnapshots"`
+	SnapProvisionSize       int64         `json:"snapProvisionSize"`
+	CoreNum                 int64         `json:"coreNum"`
+	MemorySize              int64         `json:"memorySize"`
+	VolumeSizeSum           int64         `json:"volumeSizeSum"`
+	IncludingMemorySnapshot bool          `json:"includingMemorySnapshot"`
+}
+
+type VolSnapshot struct {
+	VolumeUrn      string `json:"volumeUrn"`
+	VolumeUri      string `json:"volumeUri"`
+	SnapUUID       string `json:"snapUuid"`
+	SnapshotInner  string `json:"snapshotInner"`
+	StorageType    string `json:"storageType"`
+	DatastoreUrn   string `json:"datastoreUrn"`
+	SnapNameOneDev string `json:"snapNameOnDev"`
+	ChgID          string `json:"chgID"`
 }
 
 func NewCreateSnapshotReq(name string) *CreateSnapshotReq {
