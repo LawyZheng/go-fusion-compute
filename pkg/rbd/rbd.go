@@ -6,20 +6,58 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"strings"
 )
 
-func DeleteSnapshot(ctx context.Context, volumeUrl string, snapId string) error {
+func New() *RBD {
+	return NewRBD("", "")
+}
+
+func NewWithConf(confPath string) *RBD {
+	return NewRBD("", confPath)
+}
+
+func NewRBD(binPath string, confPath string) *RBD {
+	return &RBD{bin: binPath, config: confPath}
+}
+
+type RBD struct {
+	bin    string
+	config string
+}
+
+func (r *RBD) getBin() string {
+	if strings.TrimSpace(r.bin) == "" {
+		return "rbd"
+	}
+	return r.bin
+}
+
+func (r *RBD) getArgs() []string {
+	if strings.TrimSpace(r.config) == "" {
+		return []string{}
+	}
+	return []string{"--conf", r.config}
+}
+
+func (r *RBD) getCmd(ctx context.Context) *exec.Cmd {
+	return exec.CommandContext(ctx, r.getBin(), r.getArgs()...)
+}
+
+func (r *RBD) DeleteSnapshot(ctx context.Context, volumeUrl string, snapId string) error {
 	snap := fmt.Sprintf("%s@%s", volumeUrl, snapId)
-	cmd := exec.CommandContext(ctx, "rbd", "snap", "rm", snap)
+	cmd := r.getCmd(ctx)
+	cmd.Args = append(cmd.Args, "snap", "rm", snap)
 	return combinedOutput(cmd)
 }
 
-func ExportVolume(ctx context.Context, volumeUrl string, opt *ExportOption) error {
+func (r *RBD) ExportVolume(ctx context.Context, volumeUrl string, opt *ExportOption) error {
 	if err := opt.Validate(); err != nil {
 		return err
 	}
 
-	cmd := exec.CommandContext(ctx, "rbd", "export-diff")
+	cmd := r.getCmd(ctx)
+	cmd.Args = append(cmd.Args, "export-diff")
 	stderr := new(bytes.Buffer)
 	cmd.Stderr = stderr
 
@@ -37,12 +75,13 @@ func ExportVolume(ctx context.Context, volumeUrl string, opt *ExportOption) erro
 	return runWithStderr(cmd, stderr)
 }
 
-func ImportVolume(ctx context.Context, volumeUrl string, opt *ImportOption) error {
+func (r *RBD) ImportVolume(ctx context.Context, volumeUrl string, opt *ImportOption) error {
 	if err := opt.Validate(); err != nil {
 		return err
 	}
 
-	cmd := exec.CommandContext(ctx, "rbd", "import-diff")
+	cmd := r.getCmd(ctx)
+	cmd.Args = append(cmd.Args, "import-diff")
 	if opt.FilePath != nil {
 		cmd.Args = append(cmd.Args, *opt.FilePath, volumeUrl)
 	} else {
@@ -62,12 +101,13 @@ func ImportVolume(ctx context.Context, volumeUrl string, opt *ImportOption) erro
 	return combinedOutput(cmd)
 }
 
-func MergeVolume(ctx context.Context, opt *MergeOption) error {
+func (r *RBD) MergeVolume(ctx context.Context, opt *MergeOption) error {
 	if err := opt.Validate(); err != nil {
 		return err
 	}
 
-	cmd := exec.CommandContext(ctx, "rbd", "merge-diff")
+	cmd := r.getCmd(ctx)
+	cmd.Args = append(cmd.Args, "merge-diff")
 	stderr := new(bytes.Buffer)
 	cmd.Stderr = stderr
 
